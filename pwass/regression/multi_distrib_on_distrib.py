@@ -89,11 +89,9 @@ class MultiDistribOnDistribReg(BaseEstimator):
         out = []
         for i in range(Xmat.shape[0]):
             y_ = np.matmul(Xmat[i, :], self.beta)
-            # Ypred[i, :] = self.project(y_)
-            Ypred[i, :] = y_
-            curr = Distribution(
-                wbasis=self.spline_basis,
-                smooth_sigma=Xnew[0, 0].smooth_sigma)
+            Ypred[i, :] = self.project(y_)
+            curr = Distribution(wbasis=self.spline_basis,
+                                smooth_sigma=Xnew[0, 0].smooth_sigma)
             curr.init_from_quantile(
                 self.spline_basis.xgrid, self.spline_basis.eval_spline(
                     Ypred[i, :]))

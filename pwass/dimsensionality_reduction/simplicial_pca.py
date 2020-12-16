@@ -84,16 +84,6 @@ class SimplicialPCA(object):
             else:
                 out[i, :] = d.clr_coeffs
 
-        # if self.remove_last_col:
-        #     out = out[:, :-1]
-
-        # if len(np.unique(out[:, -1]) == 1) and not self.remove_last_col:
-        #     self._last_val = out[0, -1]
-        #     self.remove_last_col = True
-        #     out = out[:, :-1]
-        #     self.nbasis -= 1
-        #     self.metric = self.metric[:-1, :-1]
-
         return out
 
         

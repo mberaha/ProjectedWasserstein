@@ -111,10 +111,11 @@ class DistribOnDistribReg(BaseEstimator):
             return -np.mean(errs)
 
     def project(self, y):
-        return solve_qp(
+        out =  solve_qp(
             self.spline_basis.metric * 2,
             -2 * np.dot(self.spline_basis.metric, y),
             self.constraints_mat, self.cons_rhs)
+        return out
 
     def get_spline_mat(self, distribs):
         """Stacks all the coefficient of the spline expansions by row
@@ -139,15 +140,16 @@ class DistribOnDistribReg(BaseEstimator):
         self._compute_e_prime()
         Chat = np.zeros((self.nbasis, self.nbasis))
         Dhat = np.zeros((self.nbasis, self.nbasis))
+        E = self.spline_basis.metric
         for k in range(self.nbasis):
             ek = np.zeros(self.nbasis)
             ek[k] = 1.0
             inner_prods = np.matmul(self.Xmat, np.matmul(
                 self.spline_basis.metric, ek))
-            X_times_inner_prods = X * inner_prods[:, np.newaxis]
-            Y_times_inner_prods = Y * inner_prods[:, np.newaxis]
-            for s in range(spbasis.nbasis):
-                es = np.zeros(spbasis.nbasis)
+            X_times_inner_prods = self.Xmat * inner_prods[:, np.newaxis]
+            Y_times_inner_prods = self.Ymat * inner_prods[:, np.newaxis]
+            for s in range(self.nbasis):
+                es = np.zeros(self.nbasis)
                 es[s] = 1.0
                 Chat[k, s] = np.mean(
                     np.matmul(X_times_inner_prods, np.matmul(E, es)))
@@ -159,18 +161,18 @@ class DistribOnDistribReg(BaseEstimator):
         P = np.kron(self.Eprime, self.spline_basis.metric) + \
                 np.kron(self.spline_basis.metric, self.Eprime)
         vecbeta_hat = np.linalg.solve(Crho + rho * P, Dhat.T.reshape(-1, 1))
-        self.beta = vecbeta_hat.reshape(spbasis.nbasis, spbasis.nbasis)
+        self.beta = vecbeta_hat.reshape(self.nbasis, self.nbasis)
 
     def _compute_e_prime(self):
         self.Eprime = np.zeros_like(self.spline_basis.metric)
         for i in range(self.nbasis):
             ci = np.zeros(self.nbasis)
             ci[i] = 1
-            curr = spbasis.eval_spline_der(ci)
-            self.Eprime[i, i] = trapz(curr * curr, grid)
+            curr = self.spline_basis.eval_spline_der(ci)
+            self.Eprime[i, i] = trapz(curr * curr, self.spline_basis.xgrid)
             for j in range(i):
                 cj = np.zeros(self.nbasis)
                 cj[j] = 1
-                other = spbasis.eval_spline_der(cj)
+                other = self.spline_basis.eval_spline_der(cj)
                 self.Eprime[i, j] = trapz(curr * other, self.spline_basis.xgrid)
-                self.Eprime[j, i] = Eprime[i, j]
+                self.Eprime[j, i] = self.Eprime[i, j]

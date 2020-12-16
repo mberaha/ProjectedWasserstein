@@ -13,15 +13,12 @@ class Distribution(object):
     General class to represent a distribution
     """
     def __init__(
-            self, pdf_grid=None, pdf_eval=None, cdf_grid=None, cdf_eval=None,
-            quantile_grid=None, quantile_eval=None, xbasis=None, wbasis=None,
-            smooth_sigma=1.0):
+            self, xbasis=None, wbasis=None, smooth_sigma=1.0):
         self.thr = 1e-8
         self.smooth_sigma = smooth_sigma
         self.xbasis = xbasis
         self.wbasis = wbasis
         self.clr_eval = None
-        # self.compute_spline_expansions()
 
     def init_from_pdf(self, pdf_grid, pdf_eval):
         self.pdf_grid = pdf_grid
