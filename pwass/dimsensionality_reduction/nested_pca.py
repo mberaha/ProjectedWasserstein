@@ -60,12 +60,7 @@ class NestedPCA(PCA):
                 center = np.copy(self.bary)
                 PT = []
                 for s in range(self.nbasis):
-                    vector = 0
-                    for k in range(n+1):
-                        if k < n:
-                            vector += self.coords[i, k]*self.eig_vecs[s, k]
-                        else:
-                            vector += model.lamb[i]*model.w[s]
+                    vector = model.lamb[i] * model.w[s]
                     PT.append(center[s] + vector)
 
                 for h in range(model.nvar):
