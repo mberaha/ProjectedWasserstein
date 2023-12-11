@@ -6,27 +6,36 @@ import pickle
 
 from joblib import Parallel, delayed, effective_n_jobs
 from itertools import combinations, product
+from scipy.signal import argrelextrema, savgol_filter
+from scipy.interpolate import interp1d
+from scipy.integrate import cumtrapz, simps
 
-from wtda.t_function import TFunction
 
 
-def loadData(filename):
-    with open(filename, "rb") as fp:
-        data = pickle.load(fp)
-
-    func_eval = data["func_eval"]
-    grid = data.get("grid", None)
-    response = data["labels"]
-    if grid is None:
-        grid = np.arange(func_eval.shape[1])
-
-    ymin = np.min(func_eval)
-    ymax = np.max(func_eval)
-    sublevel_grid = np.linspace(ymin, ymax, 500)
-    tfuncs = np.array([TFunction(func_eval[i, :], grid, sublevel_grid)
-              for i in range(func_eval.shape[0])])
-
-    return tfuncs, response
+def pushforward_density(transport, unif_grid):
+    """Computes the density of T(U) when U is the uniform distribution"""
+    
+    def get_local_extrema(f):
+        """Returns a list of indices of local extrema"""
+        maxima = argrelextrema(f, np.greater)[0]
+        minima = argrelextrema(f, np.less)[0]
+        return np.sort(np.concatenate([maxima, minima]))
+    
+    eval_grid = np.linspace(np.min(transport), np.max(transport), len(unif_grid))
+    const = np.where(np.diff(transport) < 1e-5)
+    
+    extrema = get_local_extrema(transport)
+    keep = np.delete(np.arange(len(unif_grid)), extrema)
+    
+    delta = unif_grid[1] - unif_grid[0]
+    dt = -savgol_filter(transport[keep], window_length=5, polyorder=3, deriv=1)
+    dens = interp1d(transport[keep], 1.0 / np.abs(dt), bounds_error=False)(eval_grid)
+    dens[np.isnan(dens)] = 0.0    
+    for ex in extrema:   
+        dens[ex] = dens[ex-1]
+    
+    dens /= simps(dens, eval_grid) 
+    return dens, eval_grid
 
 
 def _dist_wrapper(dist_func, *args, **kwargs):

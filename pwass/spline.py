@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from scipy.linalg import lstsq
 from scipy.interpolate import splev, splrep
 from scipy.optimize import least_squares, minimize
 from qpsolvers import solve_qp
@@ -52,7 +53,7 @@ class SplineBasis(object):
             return np.sum((
                 f - splev(xgrid, (self.knots, coeffs, self.deg))) ** 2)
 
-        if xgrid is None:
+        if xgrid is None or np.all(xgrid == self.xgrid):
             B = self.B
             BBtrans = self.BBtrans
         else:
@@ -63,8 +64,14 @@ class SplineBasis(object):
                 B[i, :] = self.eval_spline(c_, xgrid)
             BBtrans = np.matmul(B, B.T)
         
-        out = np.linalg.solve(
-            BBtrans, np.dot(B, f_eval.reshape(-1, 1))).reshape(-1,)
+        # try:
+        #     out = np.linalg.solve(
+        #         BBtrans, np.dot(B, f_eval.reshape(-1, 1))).reshape(-1,)
+        # except Exception as e:
+        #     out = np.linalg.lstsq(
+        #         BBtrans, np.dot(B, f_eval.reshape(-1, 1))).reshape(-1,)
+        out = lstsq(BBtrans, np.dot(B, f_eval.reshape(-1, 1)),
+                    lapack_driver="gelsy")[0].reshape(-1,)
         return out
 
     def eval_spline(self, coeffs, xgrid=None):
@@ -102,5 +109,3 @@ class MonotoneQuadraticSplineBasis(SplineBasis):
             self.constraints_mat, self.cons_rhs)
 
         return  proj
-
-

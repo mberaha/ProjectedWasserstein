@@ -49,7 +49,7 @@ class Distribution(object):
         self.quantile_eval = quantile_eval
     
     def _invert_cdf(self):
-        keep = np.where(np.diff(self.cdf_eval) > 1e-20)
+        keep = np.where(np.diff(self.cdf_eval) > 1e-5)
         self.quantile_grid = self.cdf_eval[keep]
         self.quantile_eval = self.cdf_grid[keep]
 

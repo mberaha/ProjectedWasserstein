@@ -136,7 +136,7 @@ class NestedPCA(PCA):
 
     def transform(self, functions):
         if self.compute_spline:
-            for d in distribs:
+            for d in functions:
                 d.wbasis = self.spline_basis
                 d.compute_spline_expansions()
 

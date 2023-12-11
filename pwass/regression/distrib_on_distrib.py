@@ -80,7 +80,7 @@ class DistribOnDistribReg(BaseEstimator):
                 y_ = np.matmul(Xmat[i, :], self.beta)
             else:
                 y_ = np.matmul(
-                    self.beta, np.matmul(self.spline_basis.metric, X[i, :]))
+                    self.beta, np.matmul(self.spline_basis.metric, Xmat[i, :]))
             Ypred[i, :] = self.project(y_)
             curr = Distribution(
                 wbasis=self.spline_basis,
